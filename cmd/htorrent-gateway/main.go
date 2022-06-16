@@ -77,11 +77,7 @@ func main() {
 						}
 					}()
 
-					file.Download()
-
-					if _, err := w.Write([]byte(filepath.Join(*storagePath, file.Torrent().InfoHash().String(), file.Path()))); err != nil {
-						panic(err)
-					}
+					http.ServeContent(w, r, file.DisplayPath(), time.Unix(file.Torrent().Metainfo().CreationDate, 0), file.NewReader())
 				}
 
 				if !found {
