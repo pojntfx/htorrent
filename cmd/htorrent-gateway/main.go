@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -11,6 +12,12 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/storage"
 )
+
+type File struct {
+	Path         string `json:"path"`
+	Length       int64  `json:"length"`
+	CreationDate int64  `json:"creationTime"`
+}
 
 func main() {
 	home, err := os.UserHomeDir()
@@ -36,56 +43,82 @@ func main() {
 
 	log.Println("Listening on", *laddr)
 
-	panic(
-		http.ListenAndServe(
-			*laddr,
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				magnetLink := r.URL.Query().Get("magnet")
-				if magnetLink == "" {
-					panic("could not work with empty magnet link")
-				}
+	mux := http.NewServeMux()
 
-				path := r.URL.Query().Get("path")
-				if path == "" {
-					panic("could not work with empty path")
-				}
+	mux.HandleFunc("/info", func(w http.ResponseWriter, r *http.Request) {
+		magnetLink := r.URL.Query().Get("magnet")
+		if magnetLink == "" {
+			panic("could not work with empty magnet link")
+		}
 
-				t, err := c.AddMagnet(magnetLink)
-				if err != nil {
-					panic(err)
-				}
-				<-t.GotInfo()
+		t, err := c.AddMagnet(magnetLink)
+		if err != nil {
+			panic(err)
+		}
+		<-t.GotInfo()
 
-				found := false
-				for _, file := range t.Files() {
-					if file.Path() != path {
-						continue
+		files := []File{}
+		for _, file := range t.Files() {
+			files = append(files, File{
+				Path:         file.Path(),
+				Length:       file.Length(),
+				CreationDate: file.Torrent().Metainfo().CreationDate,
+			})
+		}
+
+		enc := json.NewEncoder(w)
+		if err := enc.Encode(files); err != nil {
+			panic(err)
+		}
+	})
+
+	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+		magnetLink := r.URL.Query().Get("magnet")
+		if magnetLink == "" {
+			panic("could not work with empty magnet link")
+		}
+
+		path := r.URL.Query().Get("path")
+		if path == "" {
+			panic("could not work with empty path")
+		}
+
+		t, err := c.AddMagnet(magnetLink)
+		if err != nil {
+			panic(err)
+		}
+		<-t.GotInfo()
+
+		found := false
+		for _, file := range t.Files() {
+			if file.Path() != path {
+				continue
+			}
+
+			found = true
+
+			go func() {
+				tick := time.NewTicker(time.Millisecond * 100)
+				defer tick.Stop()
+
+				for range tick.C {
+					if completed, total := file.BytesCompleted(), file.Length(); completed < total {
+						log.Printf("%v/%v bytes downloaded", completed, total)
+					} else {
+						return
 					}
-
-					found = true
-
-					go func() {
-						tick := time.NewTicker(time.Millisecond * 100)
-						defer tick.Stop()
-
-						for range tick.C {
-							if completed, total := file.BytesCompleted(), file.Length(); completed < total {
-								log.Printf("%v/%v bytes downloaded", completed, total)
-							} else {
-								return
-							}
-						}
-					}()
-
-					http.ServeContent(w, r, file.DisplayPath(), time.Unix(file.Torrent().Metainfo().CreationDate, 0), file.NewReader())
 				}
+			}()
 
-				if !found {
-					panic("could not find path in torrent")
-				}
+			http.ServeContent(w, r, file.DisplayPath(), time.Unix(file.Torrent().Metainfo().CreationDate, 0), file.NewReader())
+		}
 
-				c.WaitAll()
-			}),
-		),
-	)
+		if !found {
+			panic("could not find path in torrent")
+		}
+
+		c.WaitAll()
+	})
+
+	panic(http.ListenAndServe(*laddr, mux))
 }
