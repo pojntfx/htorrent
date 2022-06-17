@@ -132,8 +132,6 @@ var gatewayCmd = &cobra.Command{
 
 			t, err := c.AddMagnet(magnetLink)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-
 				panic(err)
 			}
 			<-t.GotInfo()
@@ -154,13 +152,32 @@ var gatewayCmd = &cobra.Command{
 
 			enc := json.NewEncoder(w)
 			if err := enc.Encode(files); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-
 				panic(err)
 			}
 		})
 
 		mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				err := recover()
+
+				switch err {
+				case nil:
+					fallthrough
+				case http.StatusUnauthorized:
+					fallthrough
+				case http.StatusUnprocessableEntity:
+					fallthrough
+				case http.StatusNotFound:
+					fallthrough
+				default:
+					w.WriteHeader(http.StatusInternalServerError)
+
+					log.Debug().
+						Err(err.(error)).
+						Msg("Closed connection for client")
+				}
+			}()
+
 			u, p, ok := r.BasicAuth()
 			if err := auth.Validate(u, p); !ok || err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -189,8 +206,6 @@ var gatewayCmd = &cobra.Command{
 
 			t, err := c.AddMagnet(magnetLink)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-
 				panic(err)
 			}
 			<-t.GotInfo()
