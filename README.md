@@ -1,5 +1,7 @@
 # hTorrent
 
+![Logo](./docs/logo-readme.png)
+
 HTTP to BitTorrent gateway with seeking support. Access torrents just like you would access any file served over a web server!
 
 [![hydrun CI](https://github.com/pojntfx/htorrent/actions/workflows/hydrun.yaml/badge.svg)](https://github.com/pojntfx/htorrent/actions/workflows/hydrun.yaml)
