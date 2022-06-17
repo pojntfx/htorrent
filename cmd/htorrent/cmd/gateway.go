@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +13,9 @@ import (
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/storage"
+	"github.com/pojntfx/go-auth-utils/pkg/authn"
+	"github.com/pojntfx/go-auth-utils/pkg/authn/basic"
+	"github.com/pojntfx/go-auth-utils/pkg/authn/oidc"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -18,8 +23,12 @@ import (
 )
 
 const (
-	storageFlag = "storage"
-	laddrFlag   = "laddr"
+	storageFlag      = "storage"
+	laddrFlag        = "laddr"
+	apiUsernameFlag  = "api-username"
+	apiPasswordFlag  = "api-password"
+	oidcIssuerFlag   = "oidc-issuer"
+	oidcClientIDFlag = "oidc-client-id"
 )
 
 var (
@@ -39,7 +48,7 @@ var gatewayCmd = &cobra.Command{
 	Aliases: []string{"g"},
 	Short:   "Start a gateway",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		viper.SetEnvPrefix("htorrent")
+		viper.SetEnvPrefix("")
 		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 
 		if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
@@ -68,6 +77,13 @@ var gatewayCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+			return err
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		cfg := torrent.NewDefaultClientConfig()
 
 		if viper.GetInt(verboseFlag) > 5 {
@@ -82,13 +98,27 @@ var gatewayCmd = &cobra.Command{
 		}
 		defer c.Close()
 
-		log.Info().
-			Str("address", viper.GetString(laddrFlag)).
-			Msg("Listening")
+		var auth authn.Authn
+		if strings.TrimSpace(viper.GetString(oidcIssuerFlag)) == "" && strings.TrimSpace(viper.GetString(oidcClientIDFlag)) == "" {
+			auth = basic.NewAuthn(viper.GetString(apiUsernameFlag), viper.GetString(apiPasswordFlag))
+		} else {
+			auth = oidc.NewAuthn(viper.GetString(oidcIssuerFlag), viper.GetString(oidcClientIDFlag))
+		}
+
+		if err := auth.Open(ctx); err != nil {
+			return err
+		}
 
 		mux := http.NewServeMux()
 
 		mux.HandleFunc("/info", func(w http.ResponseWriter, r *http.Request) {
+			u, p, ok := r.BasicAuth()
+			if err := auth.Validate(u, p); !ok || err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+
+				panic(fmt.Errorf("%v", http.StatusUnauthorized))
+			}
+
 			magnetLink := r.URL.Query().Get("magnet")
 			if magnetLink == "" {
 				w.WriteHeader(http.StatusUnprocessableEntity)
@@ -131,6 +161,13 @@ var gatewayCmd = &cobra.Command{
 		})
 
 		mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+			u, p, ok := r.BasicAuth()
+			if err := auth.Validate(u, p); !ok || err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+
+				panic(fmt.Errorf("%v", http.StatusUnauthorized))
+			}
+
 			magnetLink := r.URL.Query().Get("magnet")
 			if magnetLink == "" {
 				w.WriteHeader(http.StatusUnprocessableEntity)
@@ -206,6 +243,10 @@ var gatewayCmd = &cobra.Command{
 			c.WaitAll()
 		})
 
+		log.Info().
+			Str("address", viper.GetString(laddrFlag)).
+			Msg("Listening")
+
 		return http.ListenAndServe(viper.GetString(laddrFlag), mux)
 	},
 }
@@ -216,8 +257,12 @@ func init() {
 		panic(err)
 	}
 
-	rootCmd.PersistentFlags().StringP(storageFlag, "s", filepath.Join(home, ".local", "share", "htorrent", "var", "lib", "htorrent", "data"), "Path to store downloaded torrents in")
-	rootCmd.PersistentFlags().StringP(laddrFlag, "l", ":1337", "Listening address")
+	gatewayCmd.PersistentFlags().StringP(storageFlag, "s", filepath.Join(home, ".local", "share", "htorrent", "var", "lib", "htorrent", "data"), "Path to store downloaded torrents in")
+	gatewayCmd.PersistentFlags().StringP(laddrFlag, "l", ":1337", "Listening address")
+	gatewayCmd.PersistentFlags().String(apiUsernameFlag, "admin", "Username for the management API (can also be set using the API_USERNAME env variable). Ignored if any of the OIDC parameters are set.")
+	gatewayCmd.PersistentFlags().String(apiPasswordFlag, "", "Password for the management API (can also be set using the API_PASSWORD env variable). Ignored if any of the OIDC parameters are set.")
+	gatewayCmd.PersistentFlags().String(oidcIssuerFlag, "", "OIDC Issuer (i.e. https://pojntfx.eu.auth0.com/) (can also be set using the OIDC_ISSUER env variable)")
+	gatewayCmd.PersistentFlags().String(oidcClientIDFlag, "", "OIDC Client ID (i.e. myoidcclientid) (can also be set using the OIDC_CLIENT_ID env variable)")
 
 	viper.AutomaticEnv()
 
