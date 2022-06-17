@@ -15,7 +15,7 @@ const (
 var rootCmd = &cobra.Command{
 	Use:   "htorrent",
 	Short: "HTTP to BitTorrent gateway with seeking support",
-	Long: `Access torrents just like you would access any file served over a webserver!
+	Long: `Access torrents just like you would access any file served over a web server!
 
 
 Find more information at:
