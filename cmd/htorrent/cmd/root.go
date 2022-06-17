@@ -21,7 +21,7 @@ var rootCmd = &cobra.Command{
 Find more information at:
 https://github.com/pojntfx/htorrent`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		viper.SetEnvPrefix("htorrent")
+		viper.SetEnvPrefix("")
 		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 
 		if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
