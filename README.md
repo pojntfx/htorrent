@@ -13,7 +13,49 @@ HTTP to BitTorrent gateway with seeking support. Access torrents just like you w
 
 ## Overview
 
-🚧 This project is a work-in-progress! Instructions will be added as soon as it is usable. 🚧
+hTorrent is a gateway that allows you to access torrents over HTTP.
+
+It enables you to ...
+
+- **Stream torrents with (almost) any video player**: By setting the gateway as an HTTP source for a media player, you can stream & seek any torrent without downloading it.
+- **Download torrents without a torrent client**: Using i.e. cURL or a web browser, you can download a torrent just like you would download any other file.
+- **Build web apps that consume torrent sources**: While [WebTorrent](https://webtorrent.io/) is a way to stream torrents via WebRTC, hTorrent can provide a gateway for clients that don't support that capability.
+
+## Installation
+
+### Containerized
+
+You can get the OCI image like so:
+
+```shell
+$ podman pull ghcr.io/pojntfx/htorrent
+```
+
+### Natively
+
+Static binaries are available on [GitHub releases](https://github.com/pojntfx/htorrent/releases).
+
+On Linux, you can install them like so:
+
+```shell
+$ curl -L -o /tmp/htorrent "https://github.com/pojntfx/htorrent/releases/latest/download/htorrent.linux-$(uname -m)"
+$ sudo install /tmp/htorrent /usr/local/bin
+```
+
+On macOS, you can use the following:
+
+```shell
+$ curl -L -o /tmp/htorrent "https://github.com/pojntfx/htorrent/releases/latest/download/htorrent.darwin-$(uname -m)"
+$ sudo install /tmp/htorrent /usr/local/bin
+```
+
+On Windows, the following should work (using PowerShell as administrator):
+
+```shell
+PS> Invoke-WebRequest https://github.com/pojntfx/htorrent/releases/latest/download/htorrent.windows-x86_64.exe -OutFile \Windows\System32\htorrent.exe
+```
+
+You can find binaries for more operating systems and architectures on [GitHub releases](https://github.com/pojntfx/htorrent/releases).
 
 ## License
 
