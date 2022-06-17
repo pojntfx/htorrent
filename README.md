@@ -1,10 +1,10 @@
 # hTorrent
 
-HTTP to BitTorrent gateway with seeking support.
+HTTP to BitTorrent gateway with seeking support. Access torrents just like you would access any file served over a webserver!
 
 ## Overview
 
-construction This project is a work-in-progress! Instructions will be added as soon as it is usable. construction
+🚧 This project is a work-in-progress! Instructions will be added as soon as it is usable. 🚧
 
 ## License
 
