@@ -113,7 +113,7 @@ $ sudo firewall-cmd --reload
 
 It should now be reachable on [localhost:1337](http://localhost:1337/).
 
-To use it in production, put this gateway behind a TLS-enabled reverse proxy such as [Caddy](https://caddyserver.com/) or [Traefik](https://traefik.io/). For the best security, you should use OpenID Connect to authenticate; for more information, see the [gateway reference](#gateway).
+To use it in production, put this gateway behind a TLS-enabled reverse proxy such as [Caddy](https://caddyserver.com/) or [Traefik](https://traefik.io/). For the best security, you should use OpenID Connect to authenticate; for more information, see the [gateway reference](#gateway). You can also embed the gateway in your own application using it's [Go API](https://pkg.go.dev/github.com/pojntfx/htorrent/pkg/server).
 
 ### 2. Get Torrent Infos with `htorrent info`
 
@@ -152,7 +152,7 @@ $ curl -u "admin:${API_PASSWORD}" -L -G --data-urlencode 'magnet=magnet:?xt=urn:
 [{"path":"Sintel/Sintel.de.srt","length":1652,"creationTime":1655501577},{"path":"Sintel/Sintel.en.srt","length":1514,"creationTime":1655501577},{"path":"Sintel/Sintel.es.srt","length":1554,"creationTime":1655501577},{"path":"Sintel/Sintel.fr.srt","length":1618,"creationTime":1655501577},{"path":"Sintel/Sintel.it.srt","length":1546,"creationTime":1655501577},{"path":"Sintel/Sintel.mp4","length":129241752,"creationTime":1655501577},{"path":"Sintel/Sintel.nl.srt","length":1537,"creationTime":1655501577},{"path":"Sintel/Sintel.pl.srt","length":1536,"creationTime":1655501577},{"path":"Sintel/Sintel.pt.srt","length":1551,"creationTime":1655501577},{"path":"Sintel/Sintel.ru.srt","length":2016,"creationTime":1655501577},{"path":"Sintel/poster.jpg","length":46115,"creationTime":1655501577}
 ```
 
-For more information, see the [info reference](#info).
+For more information, see the [info reference](#info). You can also embed the client in your own application using it's [Go API](https://pkg.go.dev/github.com/pojntfx/htorrent/pkg/client).
 
 ### 3. Stream using a Media Player or cURL with `htorrent info -x`
 

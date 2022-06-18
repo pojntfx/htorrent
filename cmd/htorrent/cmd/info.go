@@ -1,17 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"encoding/csv"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/pojntfx/htorrent/pkg/client"
+	"github.com/pojntfx/htorrent/pkg/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -46,47 +47,21 @@ var infoCmd = &cobra.Command{
 		}
 
 		if strings.TrimSpace(viper.GetString(magnetFlag)) == "" {
-			return errEmptyMagnetLink
+			return server.ErrEmptyMagnetLink
 		}
 
-		hc := &http.Client{}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-		baseURL, err := url.Parse(viper.GetString(raddrFlag))
+		manager := client.NewManager(
+			viper.GetString(raddrFlag),
+			viper.GetString(apiUsernameFlag),
+			viper.GetString(apiPasswordFlag),
+			ctx,
+		)
+
+		files, err := manager.GetInfo(viper.GetString(magnetFlag))
 		if err != nil {
-			return err
-		}
-
-		infoSuffix, err := url.Parse("/info")
-		if err != nil {
-			return err
-		}
-
-		info := baseURL.ResolveReference(infoSuffix)
-
-		q := info.Query()
-		q.Set("magnet", viper.GetString(magnetFlag))
-		info.RawQuery = q.Encode()
-
-		req, err := http.NewRequest(http.MethodGet, info.String(), http.NoBody)
-		if err != nil {
-			return err
-		}
-		req.SetBasicAuth(viper.GetString(apiUsernameFlag), viper.GetString(apiPasswordFlag))
-
-		res, err := hc.Do(req)
-		if err != nil {
-			return err
-		}
-		if res.Body != nil {
-			defer res.Body.Close()
-		}
-		if res.StatusCode != http.StatusOK {
-			return errors.New(res.Status)
-		}
-
-		files := []file{}
-		dec := json.NewDecoder(res.Body)
-		if err := dec.Decode(&files); err != nil {
 			return err
 		}
 
@@ -99,7 +74,7 @@ var infoCmd = &cobra.Command{
 			}
 
 			for _, f := range files {
-				streamURL, err := getStreamURL(baseURL, viper.GetString(magnetFlag), f.Path)
+				streamURL, err := getStreamURL(viper.GetString(raddrFlag), viper.GetString(magnetFlag), f.Path)
 				if err != nil {
 					return err
 				}
@@ -113,7 +88,7 @@ var infoCmd = &cobra.Command{
 
 			for _, f := range files {
 				if exp.Match([]byte(f.Path)) {
-					streamURL, err := getStreamURL(baseURL, viper.GetString(magnetFlag), f.Path)
+					streamURL, err := getStreamURL(viper.GetString(raddrFlag), viper.GetString(magnetFlag), f.Path)
 					if err != nil {
 						return err
 					}
@@ -131,13 +106,18 @@ var infoCmd = &cobra.Command{
 	},
 }
 
-func getStreamURL(base *url.URL, magnet, path string) (string, error) {
+func getStreamURL(base string, magnet, path string) (string, error) {
+	baseURL, err := url.Parse(base)
+	if err != nil {
+		return "", err
+	}
+
 	streamSuffix, err := url.Parse("/stream")
 	if err != nil {
 		return "", err
 	}
 
-	stream := base.ResolveReference(streamSuffix)
+	stream := baseURL.ResolveReference(streamSuffix)
 
 	q := stream.Query()
 	q.Set("magnet", magnet)
