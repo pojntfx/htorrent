@@ -2,19 +2,17 @@ package cmd
 
 import (
 	"context"
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/pojntfx/htorrent/pkg/client"
 	"github.com/pojntfx/htorrent/pkg/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -28,6 +26,19 @@ var (
 	errMissingAPIUsername      = errors.New("missing API username")
 	errNoPathMatchesExpression = errors.New("could not find a path that matches the supplied expression")
 )
+
+type infoWithStreamURL struct {
+	Name         string              `yaml:"name"`
+	Description  string              `yaml:"description"`
+	CreationDate int64               `yaml:"creationDate"`
+	Files        []fileWithStreamURL `yaml:"files"`
+}
+
+type fileWithStreamURL struct {
+	Path      string `yaml:"path"`
+	Length    int64  `yaml:"length"`
+	StreamURL string `yaml:"streamURL"`
+}
 
 var infoCmd = &cobra.Command{
 	Use:     "info",
@@ -60,33 +71,42 @@ var infoCmd = &cobra.Command{
 			ctx,
 		)
 
-		files, err := manager.GetInfo(viper.GetString(magnetFlag))
+		info, err := manager.GetInfo(viper.GetString(magnetFlag))
 		if err != nil {
 			return err
 		}
 
 		if strings.TrimSpace(viper.GetString(expressionFlag)) == "" {
-			w := csv.NewWriter(os.Stdout)
-			defer w.Flush()
-
-			if err := w.Write([]string{"path", "length", "creationTime", "streamURL"}); err != nil {
-				return err
+			i := infoWithStreamURL{
+				Name:         info.Name,
+				Description:  info.Description,
+				CreationDate: info.CreationDate,
+				Files:        []fileWithStreamURL{},
 			}
 
-			for _, f := range files {
+			for _, f := range info.Files {
 				streamURL, err := getStreamURL(viper.GetString(raddrFlag), viper.GetString(magnetFlag), f.Path)
 				if err != nil {
 					return err
 				}
 
-				if err := w.Write([]string{f.Path, fmt.Sprintf("%v", f.Length), time.Unix(f.CreationDate, 0).Format(time.RFC3339), streamURL}); err != nil {
-					return err
-				}
+				i.Files = append(i.Files, fileWithStreamURL{
+					Path:      f.Path,
+					Length:    f.Length,
+					StreamURL: streamURL,
+				})
 			}
+
+			y, err := yaml.Marshal(i)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s", y)
 		} else {
 			exp := regexp.MustCompile(viper.GetString(expressionFlag))
 
-			for _, f := range files {
+			for _, f := range info.Files {
 				if exp.Match([]byte(f.Path)) {
 					streamURL, err := getStreamURL(viper.GetString(raddrFlag), viper.GetString(magnetFlag), f.Path)
 					if err != nil {

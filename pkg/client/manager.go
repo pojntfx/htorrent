@@ -35,47 +35,47 @@ func NewManager(
 	}
 }
 
-func (m *Manager) GetInfo(magnetLink string) ([]v1.File, error) {
+func (m *Manager) GetInfo(magnetLink string) (v1.Info, error) {
 	hc := &http.Client{}
 
 	baseURL, err := url.Parse(m.url)
 	if err != nil {
-		return nil, err
+		return v1.Info{}, err
 	}
 
 	infoSuffix, err := url.Parse("/info")
 	if err != nil {
-		return nil, err
+		return v1.Info{}, err
 	}
 
-	info := baseURL.ResolveReference(infoSuffix)
+	infoURL := baseURL.ResolveReference(infoSuffix)
 
-	q := info.Query()
+	q := infoURL.Query()
 	q.Set("magnet", magnetLink)
-	info.RawQuery = q.Encode()
+	infoURL.RawQuery = q.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, info.String(), http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, infoURL.String(), http.NoBody)
 	if err != nil {
-		return nil, err
+		return v1.Info{}, err
 	}
 	req.SetBasicAuth(m.username, m.password)
 
 	res, err := hc.Do(req)
 	if err != nil {
-		return nil, err
+		return v1.Info{}, err
 	}
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
+		return v1.Info{}, errors.New(res.Status)
 	}
 
-	files := []v1.File{}
+	info := v1.Info{}
 	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&files); err != nil {
-		return nil, err
+	if err := dec.Decode(&info); err != nil {
+		return v1.Info{}, err
 	}
 
-	return files, nil
+	return info, nil
 }

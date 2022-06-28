@@ -1,11 +1,14 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -124,22 +127,45 @@ func (g *Gateway) Open() error {
 		}
 		<-t.GotInfo()
 
-		files := []v1.File{}
+		info := v1.Info{
+			Files: []v1.File{},
+		}
+		info.Name = t.Info().BestName()
+		info.CreationDate = t.Metainfo().CreationDate
+
+		foundDescription := false
 		for _, f := range t.Files() {
 			log.Debug().
 				Str("magnet", magnetLink).
 				Str("path", f.Path()).
 				Msg("Got info")
 
-			files = append(files, v1.File{
-				Path:         f.Path(),
-				Length:       f.Length(),
-				CreationDate: f.Torrent().Metainfo().CreationDate,
+			info.Files = append(info.Files, v1.File{
+				Path:   f.Path(),
+				Length: f.Length(),
 			})
+
+			if path.Ext(f.Path()) == ".txt" {
+				if foundDescription {
+					continue
+				}
+
+				r := f.NewReader()
+				defer r.Close()
+
+				var description bytes.Buffer
+				if _, err := io.Copy(&description, r); err != nil {
+					panic(err)
+				}
+
+				info.Description = description.String()
+
+				foundDescription = true
+			}
 		}
 
 		enc := json.NewEncoder(w)
-		if err := enc.Encode(files); err != nil {
+		if err := enc.Encode(info); err != nil {
 			panic(err)
 		}
 	})
@@ -149,13 +175,7 @@ func (g *Gateway) Open() error {
 			err := recover()
 
 			switch err {
-			case nil:
-				fallthrough
 			case http.StatusUnauthorized:
-				fallthrough
-			case http.StatusUnprocessableEntity:
-				fallthrough
-			case http.StatusNotFound:
 				fallthrough
 			default:
 				w.WriteHeader(http.StatusInternalServerError)
@@ -173,7 +193,8 @@ func (g *Gateway) Open() error {
 
 		u, p, ok := r.BasicAuth()
 		if err := auth.Validate(u, p); !ok || err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
+			w.Header().Set("WWW-Authenticate", `Basic realm="hTorrent"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			panic(fmt.Errorf("%v", http.StatusUnauthorized))
 		}
