@@ -160,9 +160,14 @@ func (g *Gateway) Open() error {
 			default:
 				w.WriteHeader(http.StatusInternalServerError)
 
-				log.Debug().
-					Err(err.(error)).
-					Msg("Closed connection for client")
+				e, ok := err.(error)
+				if ok {
+					log.Debug().
+						Err(e).
+						Msg("Closed connection for client")
+				} else {
+					log.Debug().Msg("Closed connection for client")
+				}
 			}
 		}()
 
