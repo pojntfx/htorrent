@@ -36,7 +36,7 @@ type Gateway struct {
 	oidcClientID string
 	debug        bool
 
-	onDownloadProgress func(peers int, total, completed int64, path string)
+	onDownloadProgress func(torrentMetrics v1.TorrentMetrics, fileMetrics v1.FileMetrics)
 
 	torrentClient *torrent.Client
 	srv           *http.Server
@@ -55,7 +55,7 @@ func NewGateway(
 	oidcClientID string,
 	debug bool,
 
-	onDownloadProgress func(peers int, total, completed int64, path string),
+	onDownloadProgress func(torrentMetrics v1.TorrentMetrics, fileMetrics v1.FileMetrics),
 
 	ctx context.Context,
 ) *Gateway {
@@ -170,6 +170,50 @@ func (g *Gateway) Open() error {
 		}
 	})
 
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		u, p, ok := r.BasicAuth()
+		if err := auth.Validate(u, p); !ok || err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+
+			panic(fmt.Errorf("%v", http.StatusUnauthorized))
+		}
+
+		log.Debug().
+			Msg("Getting metrics")
+
+		metrics := []v1.TorrentMetrics{}
+		for _, t := range g.torrentClient.Torrents() {
+			mi := t.Metainfo()
+
+			info, err := mi.UnmarshalInfo()
+			if err != nil {
+				panic(err)
+			}
+
+			fileMetrics := []v1.FileMetrics{}
+			for _, f := range t.Files() {
+				fileMetrics = append(fileMetrics, v1.FileMetrics{
+					Path:      f.Path(),
+					Length:    f.Length(),
+					Completed: f.BytesCompleted(),
+				})
+			}
+
+			torrentMetrics := v1.TorrentMetrics{
+				Magnet: mi.Magnet(nil, &info).String(),
+				Peers:  len(t.PeerConns()),
+				Files:  fileMetrics,
+			}
+
+			metrics = append(metrics, torrentMetrics)
+		}
+
+		enc := json.NewEncoder(w)
+		if err := enc.Encode(metrics); err != nil {
+			panic(err)
+		}
+	})
+
 	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			err := recover()
@@ -238,20 +282,19 @@ func (g *Gateway) Open() error {
 
 				lastCompleted := int64(0)
 				for range tick.C {
-					if completed, total := f.BytesCompleted(), f.Length(); completed < total {
+					if completed, length := f.BytesCompleted(), f.Length(); completed < length {
 						if completed != lastCompleted {
-							log.Debug().
-								Int("peers", len(f.Torrent().PeerConns())).
-								Int64("total", total).
-								Int64("completed", completed).
-								Str("path", f.Path()).
-								Msg("Streaming")
-
 							g.onDownloadProgress(
-								len(f.Torrent().PeerConns()),
-								total,
-								completed,
-								f.Path(),
+								v1.TorrentMetrics{
+									Magnet: magnetLink,
+									Peers:  len(f.Torrent().PeerConns()),
+									Files:  []v1.FileMetrics{},
+								},
+								v1.FileMetrics{
+									Path:      f.Path(),
+									Length:    length,
+									Completed: completed,
+								},
 							)
 						}
 
