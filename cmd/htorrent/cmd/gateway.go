@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"syscall"
 
+	v1 "github.com/pojntfx/htorrent/pkg/api/http/v1"
 	"github.com/pojntfx/htorrent/pkg/server"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -60,12 +61,13 @@ var gatewayCmd = &cobra.Command{
 			viper.GetString(oidcIssuerFlag),
 			viper.GetString(oidcClientIDFlag),
 			viper.GetInt(verboseFlag) > 5,
-			func(peers int, total, completed int64, path string) {
+			func(torrentMetrics v1.TorrentMetrics, fileMetrics v1.FileMetrics) {
 				log.Debug().
-					Int("peers", peers).
-					Int64("total", total).
-					Int64("completed", completed).
-					Str("path", path).
+					Str("magnet", torrentMetrics.Magnet).
+					Int("peers", torrentMetrics.Peers).
+					Str("path", fileMetrics.Path).
+					Int64("length", fileMetrics.Length).
+					Int64("completed", fileMetrics.Completed).
 					Msg("Streaming")
 			},
 			ctx,
