@@ -43,7 +43,7 @@ type fileWithStreamURL struct {
 var infoCmd = &cobra.Command{
 	Use:     "info",
 	Aliases: []string{"i"},
-	Short:   "Get streamable URLs from the gateway's info endpoint",
+	Short:   "Get streamable URLs and other info for a magnet link from the gateway",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 			return err

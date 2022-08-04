@@ -79,3 +79,44 @@ func (m *Manager) GetInfo(magnetLink string) (v1.Info, error) {
 
 	return info, nil
 }
+
+func (m *Manager) GetMetrics() ([]v1.TorrentMetrics, error) {
+	hc := &http.Client{}
+
+	baseURL, err := url.Parse(m.url)
+	if err != nil {
+		return []v1.TorrentMetrics{}, err
+	}
+
+	infoSuffix, err := url.Parse("/metrics")
+	if err != nil {
+		return []v1.TorrentMetrics{}, err
+	}
+
+	infoURL := baseURL.ResolveReference(infoSuffix)
+
+	req, err := http.NewRequest(http.MethodGet, infoURL.String(), http.NoBody)
+	if err != nil {
+		return []v1.TorrentMetrics{}, err
+	}
+	req.SetBasicAuth(m.username, m.password)
+
+	res, err := hc.Do(req)
+	if err != nil {
+		return []v1.TorrentMetrics{}, err
+	}
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+	if res.StatusCode != http.StatusOK {
+		return []v1.TorrentMetrics{}, errors.New(res.Status)
+	}
+
+	metrics := []v1.TorrentMetrics{}
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&metrics); err != nil {
+		return []v1.TorrentMetrics{}, err
+	}
+
+	return metrics, nil
+}
