@@ -180,6 +180,26 @@ $ file ~/Downloads/sintel.mp4
 
 For more information, see the [info reference](#info).
 
+#### 4. Get Torrent Metrics with `htorrent metrics`
+
+If you want to check metrics such as download progress or the amount of connected peers, you can use the metrics endpoint:
+
+```shell
+$ htorrent metrics
+- magnet: magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F
+  peers: 2
+  files:
+    - path: Sintel/Sintel.de.srt
+      length: 1652
+      completed: 1652
+    - path: Sintel/Sintel.en.srt
+      length: 1514
+      completed: 1514
+    - path: Sintel/Sintel.es.srt
+```
+
+For more information, see the [metrics reference](#metrics).
+
 🚀 **That's it!** We hope you enjoy using hTorrent.
 
 ## Reference
@@ -242,7 +262,7 @@ Global Flags:
 
 ```shell
 $ htorrent info --help
-Get streamable URLs from the gateway's info endpoint
+Get streamable URLs and other info for a magnet link from the gateway
 
 Usage:
   htorrent info [flags]
@@ -256,6 +276,28 @@ Flags:
   -x, --expression string     Regex to select the link to output by, i.e. (.*).mkv$ to only return the first .mkv file; disables all other info
   -h, --help                  help for info
   -m, --magnet string         Magnet link to get info for
+  -r, --raddr string          Remote address (default "http://localhost:1337/")
+
+Global Flags:
+  -v, --verbose int   Verbosity level (0 is disabled, default is info, 7 is trace) (default 5)
+```
+
+#### Metrics
+
+```shell
+$ htorrent metrics --help
+Get metrics from the gateway
+
+Usage:
+  htorrent metrics [flags]
+
+Aliases:
+  metrics, m
+
+Flags:
+  -p, --api-password string   Username or OIDC access token for the gateway
+  -u, --api-username string   Username for the gateway (default "admin")
+  -h, --help                  help for metrics
   -r, --raddr string          Remote address (default "http://localhost:1337/")
 
 Global Flags:
