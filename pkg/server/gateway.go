@@ -131,6 +131,7 @@ func (g *Gateway) Open() error {
 			Files: []v1.File{},
 		}
 		info.Name = t.Info().BestName()
+		info.InfoHash = t.InfoHash().HexString()
 		info.CreationDate = t.Metainfo().CreationDate
 
 		foundDescription := false
@@ -200,9 +201,10 @@ func (g *Gateway) Open() error {
 			}
 
 			torrentMetrics := v1.TorrentMetrics{
-				Magnet: mi.Magnet(nil, &info).String(),
-				Peers:  len(t.PeerConns()),
-				Files:  fileMetrics,
+				Magnet:   mi.Magnet(nil, &info).String(),
+				InfoHash: mi.HashInfoBytes().HexString(),
+				Peers:    len(t.PeerConns()),
+				Files:    fileMetrics,
 			}
 
 			metrics = append(metrics, torrentMetrics)
