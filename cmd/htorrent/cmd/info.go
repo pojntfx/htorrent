@@ -29,6 +29,7 @@ var (
 
 type infoWithStreamURL struct {
 	Name         string              `yaml:"name"`
+	InfoHash     string              `json:"infohash"`
 	Description  string              `yaml:"description"`
 	CreationDate int64               `yaml:"creationDate"`
 	Files        []fileWithStreamURL `yaml:"files"`
@@ -79,6 +80,7 @@ var infoCmd = &cobra.Command{
 		if strings.TrimSpace(viper.GetString(expressionFlag)) == "" {
 			i := infoWithStreamURL{
 				Name:         info.Name,
+				InfoHash:     info.InfoHash,
 				Description:  info.Description,
 				CreationDate: info.CreationDate,
 				Files:        []fileWithStreamURL{},
