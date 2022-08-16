@@ -3,8 +3,9 @@ module github.com/pojntfx/htorrent
 go 1.18
 
 require (
-	github.com/anacrolix/torrent v1.44.0
+	github.com/anacrolix/torrent v1.40.1
 	github.com/json-iterator/go v1.1.12
+	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pojntfx/go-auth-utils v0.1.0
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.4.0
@@ -17,7 +18,8 @@ require (
 	github.com/RoaringBitmap/roaring v1.0.1-0.20220510143707-3f418c4f42a4 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect
 	github.com/anacrolix/chansync v0.3.0 // indirect
-	github.com/anacrolix/dht/v2 v2.16.2-0.20220311024416-dd658f18fd51 // indirect
+	github.com/anacrolix/confluence v1.9.0 // indirect
+	github.com/anacrolix/dht/v2 v2.15.1 // indirect
 	github.com/anacrolix/envpprof v1.2.1 // indirect
 	github.com/anacrolix/generics v0.0.0-20220510042907-b50562b436ec // indirect
 	github.com/anacrolix/go-libutp v1.2.0 // indirect
@@ -75,6 +77,7 @@ require (
 	github.com/pion/udp v0.1.1 // indirect
 	github.com/pion/webrtc/v3 v3.1.24-0.20220208053747-94262c1b2b38 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rs/dnscache v0.0.0-20210201191234-295bba877686 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -97,4 +100,9 @@ require (
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	modernc.org/libc v1.11.82 // indirect
+	modernc.org/mathutil v1.4.1 // indirect
+	modernc.org/memory v1.0.5 // indirect
+	modernc.org/sqlite v1.14.2-0.20211125151325-d4ed92c0a70f // indirect
+	zombiezen.com/go/sqlite v0.8.0 // indirect
 )
