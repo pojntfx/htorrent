@@ -14,6 +14,7 @@ import (
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/storage"
+	"github.com/phayes/freeport"
 	"github.com/pojntfx/go-auth-utils/pkg/authn"
 	"github.com/pojntfx/go-auth-utils/pkg/authn/basic"
 	"github.com/pojntfx/go-auth-utils/pkg/authn/oidc"
@@ -82,6 +83,12 @@ func (g *Gateway) Open() error {
 	cfg := torrent.NewDefaultClientConfig()
 	cfg.Debug = g.debug
 	cfg.DefaultStorage = storage.NewFileByInfoHash(g.storage)
+
+	torrentPort, err := freeport.GetFreePort()
+	if err != nil {
+		panic(err)
+	}
+	cfg.ListenPort = torrentPort
 
 	c, err := torrent.NewClient(cfg)
 	if err != nil {
