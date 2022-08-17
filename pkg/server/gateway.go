@@ -195,7 +195,11 @@ func (g *Gateway) Open() error {
 
 			info, err := mi.UnmarshalInfo()
 			if err != nil {
-				panic(err)
+				log.Error().
+					Err(err).
+					Msg("Could not unmarshal metainfo")
+
+				continue
 			}
 
 			fileMetrics := []v1.FileMetrics{}
