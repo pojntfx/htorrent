@@ -7,6 +7,7 @@ WORKDIR /data
 
 # Build the release
 COPY . .
+RUN make depend
 RUN make
 
 # Extract the release
