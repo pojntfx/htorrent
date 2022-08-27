@@ -282,7 +282,9 @@ func (g *Gateway) Open() error {
 		<-t.GotInfo()
 
 		found := false
-		for _, f := range t.Files() {
+		for _, l := range t.Files() {
+			f := l
+
 			if f.Path() != path {
 				continue
 			}
@@ -331,8 +333,6 @@ func (g *Gateway) Open() error {
 
 			panic(ErrCouldNotFindPath)
 		}
-
-		c.WaitAll()
 	})
 
 	g.srv = &http.Server{Addr: g.laddr}
