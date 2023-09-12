@@ -48,4 +48,5 @@ depend:
 	rm -rf hack
 	mkdir -p hack
 	git clone --depth=1 https://github.com/anacrolix/torrent.git hack/torrent
+
 	go generate ./...

@@ -324,8 +324,6 @@ All command line arguments described above can also be set using environment var
 
 - [anacrolix/torrent](https://github.com/anacrolix/torrent) provides the BitTorrent library.
 
-To all the rest of the authors who worked on the dependencies used: **Thanks a lot!**
-
 ## Contributing
 
 To contribute, please use the [GitHub flow](https://guides.github.com/introduction/flow/) and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
@@ -349,6 +347,6 @@ Have any questions or need help? Chat with us [on Matrix](https://matrix.to/#/#h
 
 ## License
 
-hTorrent (c) 2022 Felicitas Pojtinger and contributors
+hTorrent (c) 2023 Felicitas Pojtinger and contributors
 
 SPDX-License-Identifier: AGPL-3.0

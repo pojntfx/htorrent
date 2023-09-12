@@ -1,5 +1,5 @@
 # Build container
-FROM golang:bullseye AS build
+FROM golang:bookworm AS build
 
 # Setup environment
 RUN mkdir -p /data
@@ -15,7 +15,7 @@ RUN mkdir -p /out
 RUN cp out/htorrent /out/htorrent
 
 # Release container
-FROM debian:bullseye
+FROM debian:bookworm
 
 # Add certificates
 RUN apt update
