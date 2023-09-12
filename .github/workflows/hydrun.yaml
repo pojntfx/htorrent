@@ -20,7 +20,7 @@ jobs:
             os: golang:bookworm
             flags: ""
             cmd: GOFLAGS="-short" ./Hydrunfile test
-            dst: out/*
+            dst: out/nonexistent
           - id: go-htorrent
             src: .
             os: golang:bookworm
