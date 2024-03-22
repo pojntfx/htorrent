@@ -1,6 +1,6 @@
-# hTorrent
+<img alt="Project icon" style="vertical-align: middle;" src="./docs/icon.svg" width="128" height="128" align="left">
 
-![Logo](./docs/logo-readme.png)
+# hTorrent
 
 HTTP to BitTorrent gateway with seeking support. Access torrents just like you would access any file served over a web server!
 
@@ -347,6 +347,6 @@ Have any questions or need help? Chat with us [on Matrix](https://matrix.to/#/#h
 
 ## License
 
-hTorrent (c) 2023 Felicitas Pojtinger and contributors
+hTorrent (c) 2024 Felicitas Pojtinger and contributors
 
 SPDX-License-Identifier: AGPL-3.0
