@@ -17,7 +17,7 @@ jobs:
         target:
           - src: .
             image: ghcr.io/pojntfx/htorrent
-            arch: "linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/386,linux/s390x" # linux/mips64le,linux/ppc64le
+            arch: "linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/s390x" # linux/arm/v5,linux/mips64le,linux/ppc64le
 
     steps:
       - name: Maximize build space
@@ -31,7 +31,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Login to Docker Hub
+      - name: Login to registry
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
@@ -50,9 +50,11 @@ jobs:
           file: ${{ matrix.target.src }}/Dockerfile
           platforms: ${{ matrix.target.arch }}
           push: false
-          tags: ${{ matrix.target.image }}:unstable
+          tags: ${{ matrix.target.image }}:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
-      - name: Push pre-release image to Docker Hub
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Push pre-release image to registry
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v2
         with:
@@ -60,9 +62,11 @@ jobs:
           file: ${{ matrix.target.src }}/Dockerfile
           platforms: ${{ matrix.target.arch }}
           push: true
-          tags: ${{ matrix.target.image }}:unstable
+          tags: ${{ matrix.target.image }}:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
-      - name: Push release image to Docker Hub
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Push release image to registry
         if: startsWith(github.ref, 'refs/tags/v')
         uses: docker/build-push-action@v2
         with:
@@ -72,3 +76,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

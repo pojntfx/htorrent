@@ -16,13 +16,13 @@ jobs:
       matrix:
         target:
           - id: test
-            src: .
+            src: go
             os: golang:bookworm
             flags: ""
             cmd: GOFLAGS="-short" ./Hydrunfile test
             dst: out/nonexistent
-          - id: go-htorrent
-            src: .
+          - id: go-purl
+            src: go
             os: golang:bookworm
             flags: ""
             cmd: ./Hydrunfile go htorrent
@@ -86,3 +86,4 @@ jobs:
           prerelease: false
           files: |
             /tmp/out/*/*
+

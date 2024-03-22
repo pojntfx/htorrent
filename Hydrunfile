@@ -22,12 +22,12 @@ if [ "$1" = "go" ]; then
     apt update
     apt install -y curl make
 
-    # Configure Git
-    git config --global --add safe.directory '*'
-
     # Install bagop
     curl -L -o /tmp/bagop "https://github.com/pojntfx/bagop/releases/latest/download/bagop.linux-$(uname -m)"
     install /tmp/bagop /usr/local/bin
+
+    # Configure Git
+    git config --global --add safe.directory '*'
 
     # Generate dependencies
     make depend
