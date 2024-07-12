@@ -15,7 +15,7 @@ HTTP to BitTorrent gateway with seeking support. Access torrents just like you w
 
 hTorrent is a gateway that allows you to access torrents over HTTP.
 
-It enables you to ...
+It enables you to:
 
 - **Stream torrents with (almost) any video player**: By setting the gateway as an HTTP source for a media player, you can stream & seek any torrent without downloading it.
 - **Download torrents without a torrent client**: Using i.e. cURL or a web browser, you can download a torrent just like you would download any other file.
@@ -57,7 +57,7 @@ PS> Invoke-WebRequest https://github.com/pojntfx/htorrent/releases/latest/downlo
 
 You can find binaries for more operating systems and architectures on [GitHub releases](https://github.com/pojntfx/htorrent/releases).
 
-## Usage
+## Tutorial
 
 > TL;DR: Provide a magnet link and path as the `magnet` and `path` URL parameters, authorize using HTTP basic auth or OpenID Connect, and process the resulting HTTP stream using i.e. MPV, cURL or your browser
 
