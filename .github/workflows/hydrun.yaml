@@ -24,11 +24,11 @@ jobs:
             runner: ubuntu-latest
 
           # Binaries
-          - id: go.purl
+          - id: go.htorrent
             src: .
             os: golang:bookworm
             flags: -e '-v /tmp/ccache:/root/.cache/go-build'
-            cmd: ./Hydrunfile go purl
+            cmd: ./Hydrunfile go htorrent
             dst: out/*
             runner: ubuntu-latest
 
